@@ -4,12 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --blue-rgb: 237 245 255;
-  --green-rgb: 125 161 35;
+html,
+body,
+#root {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
+  display: flex;
+  align-items: center;
+  align-content: center;
   font-family: "Work Sans", sans-serif;
 }
 
