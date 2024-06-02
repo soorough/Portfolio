@@ -1,32 +1,52 @@
 import React, { useEffect, useRef } from "react";
 import { useGLTF, PerspectiveCamera, useAnimations } from "@react-three/drei";
-import { useCurrentSheet } from "@theatre/r3f";
 import { useScroll } from "@react-spring/three";
+import { useFrame } from "@react-three/fiber";
+import { MathUtils } from "three";
+import { useThree } from "@react-three/fiber";
 
-const Car = (props) => {
-  const group = useRef();
-  const { nodes, materials, animations } = useGLTF("/car.glb");
-  const { actions } = useAnimations(animations, group);
-
-  const sheet = useCurrentSheet();
-
-  console.log("Sheet:", sheet);
-
+const Car = ({ ...props }) => {
+  const { camera } = useThree();
   const scroll = useScroll();
+  const group = useRef();
+  const { scene, nodes, materials, animations } = useGLTF("/car.glb");
+  const { actions } = useAnimations(animations, scene);
+  
 
-  const lightMaterial = materials["wire_5.002"];
-  if (lightMaterial) {
-    lightMaterial.emissive.setHex(0xffff00);
+  useEffect(() => void (actions["Camera.001"].play().paused = true), [actions]);
+  useFrame((state, delta) => {
+    const action = actions["Camera.001"];
+    // The offset is between 0 and 1, you can apply it to your models any way you like
+    const offset = 1 - scroll.offset;
+    action.time = MathUtils.damp(
+      action.time,
+      (action.getClip().duration / 2) * offset,
+      100,
+      delta
+    );
+    const position = [-8.34, 0.56, -0.002];
+    const rotation = [Math.PI / 2, -1.426, Math.PI / 2];
+    const scale = [9.457, 13.338, 9.457];
 
-    lightMaterial.emissiveIntensity = 0.3;
+    camera.position.set(...position);
+    camera.rotation.set(...rotation);
+    camera.scale.set(...scale);
 
-    lightMaterial.toneMapped = false;
+    camera.lookAt(0, 0, 0);
+  });
 
-    lightMaterial.needsUpdate = true;
-  }
+  useEffect(() => {
+    const lightMaterial = materials["wire_5.002"];
+    if (lightMaterial) {
+      lightMaterial.emissive.setHex(0xffff00);
+      lightMaterial.emissiveIntensity = 0.3;
+      lightMaterial.toneMapped = false;
+      lightMaterial.needsUpdate = true;
+    }
+  }, [materials]);
 
   return (
-    <group ref={group} {...props} dispose={null}>
+    <group object={scene} ref={group} {...props} dispose={null}>
       <group name="Scene">
         <PerspectiveCamera
           name="Camera001"
@@ -34,7 +54,7 @@ const Car = (props) => {
           far={1000}
           near={0.1}
           fov={45.747}
-          position={[-8.34, 0.56, -0.002]}
+          position={[-8.34, 0.556, -0.002]}
           rotation={[Math.PI / 2, -1.426, Math.PI / 2]}
           scale={[9.457, 13.338, 9.457]}
         >

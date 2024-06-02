@@ -9,7 +9,5 @@ studio.extend(r3fExtension);
 studio.initialize();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
     <App />
-  </React.StrictMode>
 );
