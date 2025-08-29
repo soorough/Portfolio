@@ -1,3 +1,11 @@
+/* Retro pixel fonts */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323:wght@400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
 }
@@ -12,7 +20,9 @@ body,
 }
 
 body {
-  background: #f0f0f0;
+  background: oklch(0.05 0 0); /* Deep dark background */
+  color: oklch(1 0 0); /* Pure white text */
+  overflow: hidden;
 }
 
 @keyframes fade-in {
@@ -28,4 +38,163 @@ canvas {
   opacity: 0;
   touch-action: none;
   animation: fade-in 3s ease 0.5s forwards;
+}
+
+/* Retro console effects */
+@keyframes retro-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes crt-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes pixel-glow {
+  0%, 100% {
+    text-shadow: 
+      0 0 2px currentColor,
+      2px 2px 0px #000,
+      4px 4px 0px rgba(255,255,255,0.3);
+  }
+  50% {
+    text-shadow: 
+      0 0 4px currentColor,
+      2px 2px 0px #000,
+      4px 4px 0px rgba(255,255,255,0.5);
+  }
+}
+
+@keyframes retro-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes grid-move {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50px); }
+}
+
+/* 3D Pixelated text effect */
+.pixel-3d-text {
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  text-shadow: 
+    2px 2px 0px #000,
+    4px 4px 0px rgba(0,0,0,0.5),
+    6px 6px 0px rgba(0,0,0,0.3),
+    0 0 10px currentColor;
+  animation: pixel-glow 2s ease-in-out infinite alternate;
+}
+
+/* CRT monitor effect */
+.crt-screen {
+  position: relative;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 100%);
+}
+
+.crt-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,0,0.03) 2px,
+    rgba(0,255,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.crt-screen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+  animation: crt-scan 2s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Retro console UI elements */
+.retro-button {
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+  border: 4px solid;
+  border-color: #00ff00 #008800 #008800 #00ff00;
+  background: 
+    linear-gradient(45deg, #003300 25%, transparent 25%),
+    linear-gradient(-45deg, #003300 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #003300 75%),
+    linear-gradient(-45deg, transparent 75%, #003300 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+  text-shadow: 2px 2px 0px #000;
+  transition: all 0.1s ease;
+}
+
+.retro-button:hover {
+  border-color: #00ffff #0088ff #0088ff #00ffff;
+  background-color: rgba(0,255,255,0.1);
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0px #000;
+}
+
+.retro-button:disabled {
+  border-color: #666 #333 #333 #666;
+  color: #666;
+  background-color: #222;
+}
+
+/* Retro input field */
+.retro-input {
+  font-family: 'VT323', monospace;
+  image-rendering: pixelated;
+  background: #000;
+  border: 2px solid #00ff00;
+  color: #00ff00;
+  text-shadow: 0 0 5px currentColor;
+  caret-color: #00ff00;
+}
+
+.retro-input:focus {
+  border-color: #00ffff;
+  color: #00ffff;
+  outline: none;
+  box-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+
+/* Star Wars crawl effect */
+.star-wars-text {
+  font-family: 'VT323', monospace;
+  color: #ffff00;
+  text-shadow: 0 0 10px #ffff00;
+  animation: retro-flicker 3s ease-in-out infinite;
+}
+
+/* Scanline effect */
+.scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(255,255,255,0.05) 1px,
+    rgba(255,255,255,0.05) 2px
+  );
+  animation: grid-move 2s linear infinite;
+}
+
+.pixel-border {
+  border-image: url("data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m0 0h100v100h-100z' fill='none' stroke='%2300ff00' stroke-width='2'/%3e%3c/svg%3e") 2;
 }

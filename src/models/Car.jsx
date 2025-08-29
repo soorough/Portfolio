@@ -2,27 +2,16 @@ import React, { useEffect, useRef } from "react";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { MathUtils } from "three";
-import { useCurrentSheet } from "@theatre/r3f";
 
 const Car = ({ keys, onProgressUpdate, onJourneyComplete, autoStart, ...props }) => {
   const { camera, set } = useThree();
-  const sheet = useCurrentSheet();
   const group = useRef();
   const { scene, nodes, materials, animations } = useGLTF("/car.glb");
   const { actions } = useAnimations(animations, scene);
   const animationTimeRef = useRef(0);
-  const sequenceRef = useRef();
   const glbCameraRef = useRef();
   const hasTriggeredEnd = useRef(false);
   const autoMoving = useRef(false);
-
-  // Initialize Theatre.js sequence
-  useEffect(() => {
-    if (sheet) {
-      sequenceRef.current = sheet.sequence;
-      console.log("Theatre.js sequence initialized:", sequenceRef.current);
-    }
-  }, [sheet]);
 
   // Debug: Log available animations and scene contents
   useEffect(() => {
@@ -70,6 +59,7 @@ const Car = ({ keys, onProgressUpdate, onJourneyComplete, autoStart, ...props })
       console.log("Available actions:", Object.keys(actions));
     }
   }, [actions]);
+
   useFrame((_, delta) => {
     if (!keys.forward && !keys.backward && !autoMoving.current) return;
     

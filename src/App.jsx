@@ -1,11 +1,23 @@
-import Scene from "./pages/Home";
+import { useState } from "react";
+import RetroStartScreen from "./components/RetroStartScreen";
+import OriginalPortfolio from "./components/OriginalPortfolio";
 
 function App() {
-  return (
-    <>
-      <Scene />
-    </>
-  );
+  const [showPortfolio, setShowPortfolio] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+
+  const handleStartScreenComplete = (name) => {
+    setPlayerName(name);
+    setShowPortfolio(true);
+  };
+
+  if (showPortfolio) {
+    return <OriginalPortfolio playerName={playerName} />;
+  }
+
+  return <RetroStartScreen onComplete={handleStartScreenComplete} />;
+
+  
 }
 
 export default App;
