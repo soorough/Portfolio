@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import Sun from "../models/Sun";
@@ -20,6 +20,9 @@ export default function OriginalPortfolio({ playerName }) {
   const [showRedirectPage, setShowRedirectPage] = useState(false);
   const [shouldAutoStart] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(true);
+  const audioRef = useRef(null);
+  const carSoundRef = useRef(null);
 
   const resumeSections = [
     {
@@ -60,6 +63,46 @@ export default function OriginalPortfolio({ playerName }) {
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Initialize and control background music
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.7; // Set volume to 70%
+      audioRef.current.loop = true;
+      
+      if (isMusicPlaying) {
+        audioRef.current.play().catch(console.log);
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isMusicPlaying]);
+
+  const toggleMusic = () => {
+    setIsMusicPlaying(!isMusicPlaying);
+  };
+
+  // Initialize car driving sound
+  useEffect(() => {
+    if (carSoundRef.current) {
+      carSoundRef.current.volume = 0.4; // Set car sound volume to 40%
+      carSoundRef.current.loop = true;
+    }
+  }, []);
+
+  // Control car driving sound based on movement
+  useEffect(() => {
+    if (carSoundRef.current) {
+      const isMoving = keys.forward || keys.backward;
+      
+      if (isMoving && isMusicPlaying) {
+        carSoundRef.current.play().catch(console.log);
+      } else {
+        carSoundRef.current.pause();
+        carSoundRef.current.currentTime = 0; // Reset to beginning when stopped
+      }
+    }
+  }, [keys.forward, keys.backward, isMusicPlaying]);
 
   // Handle journey completion
   useEffect(() => {
@@ -255,6 +298,88 @@ export default function OriginalPortfolio({ playerName }) {
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
           }
+
+          .hologram-billboard {
+            animation: hologram-drop-in 1s ease-out;
+            backdrop-filter: blur(1px);
+          }
+
+          .hologram-border {
+            border: 2px solid #00ff00;
+            box-shadow: 
+              0 0 20px #00ff00,
+              inset 0 0 20px rgba(0, 255, 0, 0.1);
+            background: rgba(0, 0, 0, 0.8);
+            position: relative;
+          }
+
+          .hologram-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+              0deg,
+              transparent,
+              transparent 2px,
+              rgba(0, 255, 0, 0.03) 2px,
+              rgba(0, 255, 0, 0.03) 4px
+            );
+            pointer-events: none;
+          }
+
+          .hologram-title {
+            font-family: 'Press Start 2P', monospace;
+            text-shadow: 0 0 10px currentColor;
+            animation: hologram-flicker 2s infinite;
+          }
+
+          .hologram-item {
+            font-family: 'VT323', monospace;
+            text-shadow: 0 0 5px currentColor;
+            animation: hologram-type-in 1s ease-out both;
+            opacity: 0;
+          }
+
+          @keyframes hologram-drop-in {
+            0% {
+              opacity: 0;
+              transform: translateY(-50px) scale(0.9);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          @keyframes hologram-flicker {
+            0%, 98% { opacity: 1; }
+            99% { opacity: 0.8; }
+            100% { opacity: 1; }
+          }
+
+          @keyframes hologram-type-in {
+            0% {
+              opacity: 0;
+              transform: translateX(-20px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          .music-control-btn {
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            backdrop-filter: blur(10px);
+          }
+
+          .music-control-btn:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.6);
+            transform: scale(1.1);
+          }
         `}</style>
       </div>
     );
@@ -299,23 +424,90 @@ export default function OriginalPortfolio({ playerName }) {
         </EffectComposer>
       </Canvas>
 
-      {/* Hologram Resume Sections - VR Style Overlays */}
+      {/* Hologram Resume Sections - Billboard Style */}
       {carProgress > 0 && resumeSections.map((section, index) => {
-        const triggerPoint = 10 + (index * 15); // Spread them out more: 10, 25, 40
-        const isActive = carProgress >= triggerPoint; // Simple: show when car reaches point, hide when it goes back
+        const triggerStart = 20 + (index * 30); // Start points: 20, 50, 80
+        const triggerEnd = triggerStart + 20; // End points: 40, 70, 100
+        const isActive = carProgress >= triggerStart && carProgress < triggerEnd;
+        
+        if (!isActive) return null;
         
         return (
-          <HologramSection
+          <div
             key={section.title}
-            title={section.title}
-            content={section.content}
-            position={section.position}
-            isActive={isActive}
-            carProgress={carProgress}
-            delay={index * 0.8}
-          />
+            className="fixed top-10 left-1/2 transform -translate-x-1/2 z-30 w-auto max-w-4xl"
+          >
+            <div className="hologram-billboard">
+              <div className="hologram-border p-6 text-center">
+                <h2 className="hologram-title text-2xl md:text-4xl mb-4 text-green-400">
+                  {section.title}
+                </h2>
+                <div className="hologram-content space-y-2">
+                  {section.content.map((item, itemIndex) => (
+                    <div
+                      key={itemIndex}
+                      className="hologram-item text-sm md:text-lg text-cyan-400"
+                      style={{
+                        animationDelay: `${itemIndex * 0.3}s`
+                      }}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         );
       })}
+
+      {/* Background Music */}
+      <audio
+        ref={audioRef}
+        src="/songs/lofi-soorough.mp3"
+        preload="auto"
+        style={{ display: 'none' }}
+      />
+
+      {/* Car Driving Sound */}
+      <audio
+        ref={carSoundRef}
+        src="/songs/car-driving-sound.mp3"
+        preload="auto"
+        style={{ display: 'none' }}
+      />
+
+      {/* Music Control Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={toggleMusic}
+          className="music-control-btn w-14 h-14 rounded-full border-2 border-green-400 bg-black bg-opacity-80 flex items-center justify-center hover:bg-opacity-100 transition-all duration-300"
+        >
+          {isMusicPlaying ? (
+            // Sound ON icon
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-green-400">
+              <path
+                d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            // Sound OFF icon
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-red-400">
+              <path
+                d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+      </div>
 
       {/* Subtitle System */}
       <SubtitleSystem 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { MathUtils } from "three";
+import { MathUtils, Vector3 } from "three";
 
 const Car = ({ keys, onProgressUpdate, onJourneyComplete, autoStart, ...props }) => {
   const { camera, set } = useThree();
@@ -12,6 +12,10 @@ const Car = ({ keys, onProgressUpdate, onJourneyComplete, autoStart, ...props })
   const glbCameraRef = useRef();
   const hasTriggeredEnd = useRef(false);
   const autoMoving = useRef(false);
+  
+  // Camera wiggle movement
+  const cameraWiggleOffset = useRef(new Vector3());
+  const wiggleTime = useRef(0);
 
   // Debug: Log available animations and scene contents
   useEffect(() => {
@@ -83,7 +87,7 @@ const Car = ({ keys, onProgressUpdate, onJourneyComplete, autoStart, ...props })
     targetTime = Math.max(0, Math.min(33.33, targetTime));
     animationTimeRef.current = targetTime;
     
-    // Manual car movement with distance limit
+    // Manual car movement with distance limit and smooth camera following
     const carGroup = group.current;
     if (carGroup) {
       const progress = targetTime / 33.33; // 0 to 1
@@ -103,19 +107,42 @@ const Car = ({ keys, onProgressUpdate, onJourneyComplete, autoStart, ...props })
         console.log("Journey complete! Triggering end animation...");
         onJourneyComplete();
       }
+
     }
     
-    // Move camera manually to maintain Camera.001 relationship with car
+    // Move camera manually to maintain Camera.001 relationship with car + wiggle movement
     const activeCamera = glbCameraRef.current;
     if (activeCamera && carGroup) {
-      // Calculate camera offset based on original Camera.001 position relative to car
-      const carX = carGroup.position.x;
+      // Increment wiggle time for smooth motion
+      wiggleTime.current += delta;
       
-      // Original Camera.001 was at x: -8.34 when car was at x: 0
-      // So camera should be at carX - 8.34
+      // Calculate base camera position (same as before)
+      const carX = carGroup.position.x;
       activeCamera.position.x = carX - 10.34;
-      activeCamera.position.y = 0.556; // Original Camera.001 Y
-      activeCamera.position.z = -0.0015; // Original Camera.001 Z
+      activeCamera.position.y = 0.556;
+      activeCamera.position.z = -0.0015;
+      
+      // Add subtle wiggle movement when moving
+      const isMoving = keys.forward || keys.backward;
+      if (isMoving) {
+        // Create subtle wiggle movements
+        const wiggleStrength = 0.02; // Very small movements
+        const wiggleSpeed = 3; // Speed of the wiggle
+        
+        // Side-to-side wiggle (like following a car on the road)
+        const sideWiggle = Math.sin(wiggleTime.current * wiggleSpeed) * wiggleStrength;
+        
+        // Slight up-down movement (like suspension)
+        const verticalWiggle = Math.sin(wiggleTime.current * wiggleSpeed * 1.3) * wiggleStrength * 0.5;
+        
+        // Very subtle forward-back movement
+        const depthWiggle = Math.sin(wiggleTime.current * wiggleSpeed * 0.8) * wiggleStrength * 0.3;
+        
+        // Apply wiggle to camera position
+        activeCamera.position.x += depthWiggle;
+        activeCamera.position.y += verticalWiggle;
+        activeCamera.position.z += sideWiggle;
+      }
       
       // Keep original Camera.001 rotation
       activeCamera.rotation.set(1.5708, -1.4257, 1.5708);
